@@ -19,12 +19,14 @@ jobs:
           python-version: 3.11
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install poetry
-          poetry install --no-dev
-
-      - name: Run tests with coverage
-        run: |
-          pytest
+        run: pip install -U pip setuptools wheel
+          
+      - name: Build package
+        run: python -m build
+          
+      - name: Install package
+        run: pip install .
+          
+      - name: Run tests
+        run: pytest
 
