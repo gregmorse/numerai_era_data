@@ -1,0 +1,37 @@
+[project]
+name = "numerai_era_data"
+description = "era-level data for Numerai"
+version = "0.1.1"
+authors = [
+    { name = "Gregory Morse", email = "gregorymorse07@gmail.com" }
+]
+dependencies = [
+    "pandas",
+    "pyarrow",
+    "yfinance",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "mock",
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=61.2", "wheel"]
+
+[tool.black]
+line-length = 119
+
+[tool.ruff]
+line-length = 119
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
