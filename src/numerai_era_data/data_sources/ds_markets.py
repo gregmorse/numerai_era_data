@@ -34,15 +34,15 @@ class DataSourceMarkets(BaseDataSource):
         CLOSE_COL = "Adj Close"
 
         # get 300 calendar days of padding for the 200 day moving average calculation
-        raw_start_date = start_date - timedelta(days=300)
+        padded_start_date = start_date - timedelta(days=300)
 
         # dataframe with all dates including weekends and holidays
         date_df = pd.DataFrame()
-        date_df[self.DATE_COL] = pd.date_range(raw_start_date, end_date)
+        date_df[self.DATE_COL] = pd.date_range(padded_start_date, end_date)
         date_df[self.DATE_COL] = date_df[self.DATE_COL].dt.date
 
         # dataframe with only trading days
-        data = yf.download("^SPX", start=raw_start_date, end=end_date)
+        data = yf.download("^SPX", start=padded_start_date, end=end_date)
         data = data.reset_index()
 
         # calculate moving averages
