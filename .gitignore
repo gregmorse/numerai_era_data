@@ -4,3 +4,4 @@ venv/
 .coverage
 exception.log
 .vscode/
+src/numerai_era_data/cache/data.parquet

@@ -37,7 +37,7 @@ class EraDataAPI:
         # logger config
         logging.basicConfig(filename="exception.log", level=logging.ERROR)
 
-    def get_all_era_features(self, update_if_stale=True) -> pd.DataFrame:
+    def get_all_eras(self, update_if_stale=True) -> pd.DataFrame:
         update = False
 
         if update_if_stale:
@@ -57,27 +57,7 @@ class EraDataAPI:
 
         return self.data_cache
 
-    def get_current_era_features(self, update_if_stale=True) -> pd.DataFrame:
-        update = False
-
-        if update_if_stale:
-            # if most current era is not in the data, update the data
-            if self.data_cache.empty or self.data_cache["era"].astype(int).max() < date_utils.get_current_era():
-                update = True
-
-            # if any columns have been added since the last update, update the data
-            for data_source_class in self._get_data_sources():
-                data_source = data_source_class()
-                if not set(data_source.get_columns()).issubset(set(self.data_cache.columns)):
-                    update = True
-                    break
-
-        if update:
-            self.update_data()
-
-        return self.data_cache.tail(1)
-
-    def get_current_daily_features(self, update_if_stale=True) -> pd.DataFrame:
+    def get_current_daily(self, update_if_stale=True) -> pd.DataFrame:
         update = False
 
         if update_if_stale:
@@ -103,10 +83,7 @@ class EraDataAPI:
 
         for data_source_class in self._get_data_sources():
             data_source = data_source_class()
-            if self.data_cache.empty or not set(data_source.get_columns()).issubset(set(self.data_cache.columns)):
-                start_date = date_utils.get_date_for_era(1)
-            else:
-                start_date = date_utils.get_date_for_era(int(self.data_cache["era"].astype(int).max() + 1))
+            start_date = date_utils.get_date_for_era(1)
             end_date = date_utils.get_date_for_era(date_utils.get_current_era())
 
             try:
@@ -127,14 +104,7 @@ class EraDataAPI:
         new_data = new_data.drop_duplicates(subset=["era"], keep="last")
         new_data = new_data.reindex(columns=["era"] + new_data.columns.difference(["era"]).tolist())
         new_data = new_data.drop(columns=["date"])
-        if self.data_cache.empty:
-            self.data_cache = new_data.reset_index(drop=True)
-        else:
-            self.data_cache = pd.merge(left=self.data_cache, right=new_data, how="outer", on="era").reset_index(
-                drop=True
-            )
-            # any NaNs here indicate that the data source was unable to provide data for the era
-            self.data_cache = self.data_cache.fillna(method="ffill")
+        self.data_cache = new_data.reset_index(drop=True)
 
         # write cache to disk
         self.data_cache.to_parquet(self.DATA_CACHE_FILE)
