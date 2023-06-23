@@ -25,8 +25,8 @@ def test_get_data_single_date():
 
 def test_get_data_cutoff():
     ds_wei = DataSourceWEI()
-    ds_data = ds_wei.get_data(date(2023, 6, 15), 
-                              date(2023, 6, 16))
+    ds_data = ds_wei.get_data(date(2023, 6, 1), 
+                              date(2023, 6, 2))
     
     assert ds_data[DataSourceWEI.COLUMN_WEI].iloc[0] != ds_data[DataSourceWEI.COLUMN_WEI].iloc[1]
 

@@ -37,7 +37,7 @@ class EraDataAPI:
         # logger config
         logging.basicConfig(filename="exception.log", level=logging.ERROR)
 
-    def get_all_era_features(self, update_if_stale=True) -> pd.DataFrame:
+    def get_all_eras(self, update_if_stale=True) -> pd.DataFrame:
         update = False
 
         if update_if_stale:
@@ -57,7 +57,7 @@ class EraDataAPI:
 
         return self.data_cache
 
-    def get_current_era_features(self, update_if_stale=True) -> pd.DataFrame:
+    def get_current_era(self, update_if_stale=True) -> pd.DataFrame:
         update = False
 
         if update_if_stale:
@@ -77,7 +77,7 @@ class EraDataAPI:
 
         return self.data_cache.tail(1)
 
-    def get_current_daily_features(self, update_if_stale=True) -> pd.DataFrame:
+    def get_current_daily(self, update_if_stale=True) -> pd.DataFrame:
         update = False
 
         if update_if_stale:
