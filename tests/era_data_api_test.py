@@ -116,7 +116,7 @@ def test_update_data_with_exception(manage_cache):
 
     assert not instance.data_cache.empty
     assert instance.data_cache["era"].tolist() == ["0001", "0002", "0003"]
-    assert instance.data_cache.columns.tolist() == ["era", "column1", "column2", "column3"]
+    assert instance.data_cache.columns.tolist() == ["era", "column2", "column3"]
 
 def test_update_daily_data_with_empty_cache(manage_cache):
     instance = manage_cache
@@ -161,62 +161,6 @@ def test_update_daily_data_with_exception(manage_cache):
     assert instance.daily_cache.columns.tolist() == [BaseDataSource.DATE_COL, "column2", "column3"]
 
 
-def test_get_current_era_no_update(manage_cache):
-    instance = manage_cache
-    instance._get_data_sources = MagicMock(return_value=[MockDataSource])
-    instance.data_cache = pd.DataFrame({"era": ["0001"], "column1": [1]})
-
-    with patch("numerai_era_data.date_utils.get_current_era", return_value=1):
-        df = instance.get_current_era()
-    
-    assert df["era"].tolist() == ["0001"]
-
-
-def test_get_current_era_with_update(manage_cache):
-    instance = manage_cache
-    instance._get_data_sources = MagicMock(return_value=[MockDataSource])
-    instance.data_cache = pd.DataFrame({"era": ["0001"], "column1": [1]})
-
-    with patch("numerai_era_data.date_utils.get_current_era", return_value=2):
-        df = instance.get_current_era()
-    
-    assert df["era"].tolist() == ["0002"]
-
-
-def test_get_current_era_with_update_and_no_cache(manage_cache):
-    instance = manage_cache
-    instance._get_data_sources = MagicMock(return_value=[MockDataSource])
-    instance.data_cache = pd.DataFrame()
-
-    with patch("numerai_era_data.date_utils.get_current_era", return_value=1):
-        df = instance.get_current_era()
-    
-    assert df["era"].tolist() == ["0001"]
-
-
-def test_get_current_era_columns_changed(manage_cache):
-    instance = manage_cache
-    instance._get_data_sources = MagicMock(return_value=[MockDataSource])
-    instance.data_cache = pd.DataFrame({"era": ["0001"], "column0": [1]})
-
-    with patch("numerai_era_data.date_utils.get_current_era", return_value=1):
-        df = instance.get_current_era()
-    
-    assert df["era"].tolist() == ["0001"]
-    assert df.columns.tolist() == ["era", "column0", "column1"]
-
-
-def test_get_current_era_no_update_stale(manage_cache):
-    instance = manage_cache
-    instance._get_data_sources = MagicMock(return_value=[MockDataSource])
-    instance.data_cache = pd.DataFrame({"era": ["0001"], "column1": [1]})
-
-    with patch("numerai_era_data.date_utils.get_current_era", return_value=3):
-        df = instance.get_current_era(False)
-    
-    assert df["era"].tolist() == ["0001"]
-
-
 def test_get_all_eras_no_update(manage_cache):
     instance = manage_cache
     instance._get_data_sources = MagicMock(return_value=[MockDataSource])
@@ -258,7 +202,7 @@ def test_get_all_eras_columns_changed(manage_cache):
     with patch("numerai_era_data.date_utils.get_current_era", return_value=1):
         df = instance.get_all_eras()
     
-    assert df.columns.tolist() == ["era", "column0", "column1"]
+    assert df.columns.tolist() == ["era", "column1"]
 
 
 def test_get_all_eras_no_update_stale(manage_cache):
