@@ -16,13 +16,13 @@ class DataSourceWEI(BaseDataSource):
     def get_data(self, start_date: date, end_date: date) -> pd.DataFrame:
         # add 13 days of padding
         padded_start_date = start_date - timedelta(days=13)
-        
+
         date_df = pd.DataFrame()
         date_df[self.DATE_COL] = pd.date_range(padded_start_date, end_date)
         date_df[self.DATE_COL] = date_df[self.DATE_COL].dt.date
-        
+
         # URL of the weekly economic index data
-        url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WEI'
+        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=WEI"
 
         # Make the HTTP request to fetch the data
         response = requests.get(url)
