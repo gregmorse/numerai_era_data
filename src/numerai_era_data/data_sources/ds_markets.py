@@ -9,13 +9,14 @@ from numerai_era_data.data_sources.base_data_source import BaseDataSource
 
 class DataSourceMarkets(BaseDataSource):
     _PREFIX = BaseDataSource._BASE_PREFIX + "markets_"
-    _PREFIX_SPX_SMA = _PREFIX + "spx_sma_"
-    _PREFIX_SPX_EMA = _PREFIX + "spx_ema_"
+    _PREFIX_RAW = BaseDataSource._BASE_PREFIX_RAW + "markets_"
+    _PREFIX_SPX_SMA = _PREFIX_RAW + "spx_sma_"
+    _PREFIX_SPX_EMA = _PREFIX_RAW + "spx_ema_"
     _PREFIX_SPX_RETURN = _PREFIX + "spx_return_"
     _TIME_WINDOWS = [10, 20, 50, 100, 200]
 
     # columns
-    COLUMN_SPX_CLOSE = _PREFIX + "spx_close"
+    COLUMN_SPX_CLOSE = _PREFIX + "raw_spx_close"
     COLUMNS = [COLUMN_SPX_CLOSE]
 
     def __init__(self):
