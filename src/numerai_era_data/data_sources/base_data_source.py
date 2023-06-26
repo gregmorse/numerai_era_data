@@ -6,6 +6,7 @@ import pandas as pd
 
 class BaseDataSource(ABC):
     _BASE_PREFIX = "era_feature_"
+    _BASE_PREFIX_RAW = "era_feature_raw_"
     DATE_COL = "date"
 
     @abstractmethod

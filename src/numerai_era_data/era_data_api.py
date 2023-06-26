@@ -17,13 +17,13 @@ class EraDataAPI:
     DAILY_CACHE_FILE = "src/numerai_era_data/cache/daily.parquet"
     class_cache: list
 
-    def __init__(self): # pragma: no cover
+    def __init__(self):  # pragma: no cover
         dir_name = os.path.dirname(self.DATA_CACHE_FILE)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
 
         if os.path.exists(self.DATA_CACHE_FILE):
-            self.data_cache = pd.read_parquet(self.DATA_CACHE_FILE) 
+            self.data_cache = pd.read_parquet(self.DATA_CACHE_FILE)
         else:
             self.data_cache = pd.DataFrame()
 
