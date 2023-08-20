@@ -5,3 +5,5 @@ venv/
 exception.log
 .vscode/
 src/numerai_era_data/cache/data.parquet
+src/numerai_era_data.egg-info/
+src/numerai_era_data/cache/daily.parquet

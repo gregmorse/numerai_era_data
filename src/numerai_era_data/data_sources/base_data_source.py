@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import date
 
 import pandas as pd
 
@@ -10,7 +10,7 @@ class BaseDataSource(ABC):
     DATE_COL = "date"
 
     @abstractmethod
-    def get_data(self, start_date: datetime, end_date: datetime) -> pd.DataFrame:  # pragma: no cover
+    def get_data(self, start_date: date, end_date: date) -> pd.DataFrame:  # pragma: no cover
         """Returns a dataframe with the following columns:
         - date: datetime
         - one or more features

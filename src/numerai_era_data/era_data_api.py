@@ -11,13 +11,11 @@ from numerai_era_data.data_sources.base_data_source import BaseDataSource
 
 
 class EraDataAPI:
-    data_cache: pd.DataFrame
-    DATA_CACHE_FILE = "src/numerai_era_data/cache/data.parquet"
-    daily_cache: pd.DataFrame
-    DAILY_CACHE_FILE = "src/numerai_era_data/cache/daily.parquet"
-    class_cache: list
+    CACHE_DIRECTORY = os.path.join(os.path.dirname(__file__), 'cache')
+    DATA_CACHE_FILE = os.path.join(CACHE_DIRECTORY, 'data.parquet')
+    DAILY_CACHE_FILE = os.path.join(CACHE_DIRECTORY, 'daily.parquet')
 
-    def __init__(self):  # pragma: no cover
+    def __init__(self):
         dir_name = os.path.dirname(self.DATA_CACHE_FILE)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
@@ -28,9 +26,9 @@ class EraDataAPI:
             self.data_cache = pd.DataFrame()
 
         if os.path.exists(self.DAILY_CACHE_FILE):
-            self.data_cache = pd.read_parquet(self.DAILY_CACHE_FILE)
+            self.daily_cache = pd.read_parquet(self.DAILY_CACHE_FILE)
         else:
-            self.data_cache = pd.DataFrame()
+            self.daily_cache = pd.DataFrame()
 
         self.class_cache = []
 
@@ -80,11 +78,11 @@ class EraDataAPI:
     def update_data(self):
         # update the cache
         new_data = pd.DataFrame()
-
+        start_date = date_utils.get_date_for_era(1)
+        end_date = date_utils.get_date_for_era(date_utils.get_current_era())
+        
         for data_source_class in self._get_data_sources():
             data_source = data_source_class()
-            start_date = date_utils.get_date_for_era(1)
-            end_date = date_utils.get_date_for_era(date_utils.get_current_era())
 
             try:
                 data = data_source.get_data(start_date, end_date)
@@ -111,11 +109,11 @@ class EraDataAPI:
 
     def update_daily_data(self):
         new_data = pd.DataFrame()
+        start_date = date_utils.get_current_date()
+        end_date = date_utils.get_current_date()
 
         for data_source_class in self._get_data_sources():
-            data_source = data_source_class()
-            start_date = date_utils.get_current_date()
-            end_date = date_utils.get_current_date()
+            data_source = data_source_class()            
             try:
                 data = data_source.get_data(start_date, end_date)
             except Exception as e:
@@ -130,6 +128,8 @@ class EraDataAPI:
 
             new_data = data if new_data.empty else pd.merge(new_data, data, how="outer", on="date")
 
+        # add era column with X value so it can be merged with the live data
+        new_data["era"] = "X"
         self.daily_cache = new_data
         self.daily_cache.to_parquet(self.DAILY_CACHE_FILE)
 

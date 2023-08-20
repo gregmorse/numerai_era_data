@@ -16,10 +16,11 @@ class DataSourceMarkets(BaseDataSource):
     _TIME_WINDOWS = [10, 20, 50, 100, 200]
 
     # columns
-    COLUMN_SPX_CLOSE = _PREFIX + "raw_spx_close"
-    COLUMNS = [COLUMN_SPX_CLOSE]
+    COLUMN_SPX_CLOSE = _PREFIX_RAW + "spx_close"
 
     def __init__(self):
+        self.COLUMNS = [self.COLUMN_SPX_CLOSE]
+        
         for i in self._TIME_WINDOWS:
             setattr(self, f"COLUMN_SPX_SMA{i}", self._PREFIX_SPX_SMA + str(i))
             self.COLUMNS.append(getattr(self, f"COLUMN_SPX_SMA{i}"))
