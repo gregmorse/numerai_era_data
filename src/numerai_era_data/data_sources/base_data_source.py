@@ -8,6 +8,7 @@ class BaseDataSource(ABC):
     _BASE_PREFIX = "era_feature_"
     _BASE_PREFIX_RAW = "era_feature_raw_"
     DATE_COL = "date"
+    ERA_COL = "era"
 
     @abstractmethod
     def get_data(self, start_date: date, end_date: date) -> pd.DataFrame:  # pragma: no cover

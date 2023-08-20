@@ -40,7 +40,7 @@ class EraDataAPI:
 
         if update_if_stale:
             # if most current era is not in the data, update the data
-            if self.data_cache.empty or self.data_cache["era"].astype(int).max() < date_utils.get_current_era():
+            if self.data_cache.empty or self.data_cache[BaseDataSource.ERA_COL].astype(int).max() < date_utils.get_current_era():
                 update = True
 
             # if any columns have been added since the last update, update the data
@@ -60,7 +60,7 @@ class EraDataAPI:
 
         if update_if_stale:
             # if most current era is not in the data, update the data
-            if self.daily_cache.empty or self.daily_cache["date"][0] != date_utils.get_current_date():
+            if self.daily_cache.empty or self.daily_cache[BaseDataSource.DATE_COL][0] != date_utils.get_current_date():
                 update = True
 
             # if any columns have been added since the last update, update the data
@@ -91,17 +91,18 @@ class EraDataAPI:
                     f"Error getting data from {data_source_class.__name__}: {e} on {start_date} to {end_date}"
                 )
                 data = pd.DataFrame()
-                data["date"] = pd.date_range(start_date, end_date)
-                data["date"] = data["date"].dt.date
+                data[BaseDataSource.DATE_COL] = pd.date_range(start_date, end_date)
+                data[BaseDataSource.DATE_COL] = data[BaseDataSource.DATE_COL].dt.date
                 data[data_source.get_columns()] = None
 
-            new_data = data if new_data.empty else pd.merge(new_data, data, how="outer", on="date")
+            new_data = data if new_data.empty else pd.merge(new_data, data, how="outer", on=BaseDataSource.DATE_COL)
 
-        new_data["era"] = new_data["date"].apply(date_utils.get_era_for_date).astype(str).str.zfill(4)
+        new_data[BaseDataSource.ERA_COL] = new_data[BaseDataSource.DATE_COL].apply(date_utils.get_era_for_date).astype(str).str.zfill(4)
         new_data = new_data.fillna(method="ffill")
-        new_data = new_data.drop_duplicates(subset=["era"], keep="last")
-        new_data = new_data.reindex(columns=["era"] + new_data.columns.difference(["era"]).tolist())
-        new_data = new_data.drop(columns=["date"])
+        new_data = new_data.drop_duplicates(subset=[BaseDataSource.ERA_COL], keep="last")
+        new_data = new_data.reindex(columns=[BaseDataSource.ERA_COL] 
+                                    + new_data.columns.difference([BaseDataSource.ERA_COL]).tolist())
+        new_data = new_data.drop(columns=[BaseDataSource.DATE_COL])
         self.data_cache = new_data.reset_index(drop=True)
 
         # write cache to disk
@@ -122,14 +123,14 @@ class EraDataAPI:
                 )
                 # fill with the last era value
                 data = pd.DataFrame()
-                data["date"] = pd.date_range(start_date, end_date)
-                data["date"] = data["date"].dt.date
+                data[BaseDataSource.DATE_COL] = pd.date_range(start_date, end_date)
+                data[BaseDataSource.DATE_COL] = data[BaseDataSource.DATE_COL].dt.date
                 data[data_source.get_columns()] = self.data_cache[data_source.get_columns()].tail(1).values
 
-            new_data = data if new_data.empty else pd.merge(new_data, data, how="outer", on="date")
+            new_data = data if new_data.empty else pd.merge(new_data, data, how="outer", on=BaseDataSource.DATE_COL)
 
         # add era column with X value so it can be merged with the live data
-        new_data["era"] = "X"
+        new_data[BaseDataSource.ERA_COL] = "X"
         self.daily_cache = new_data
         self.daily_cache.to_parquet(self.DAILY_CACHE_FILE)
 
