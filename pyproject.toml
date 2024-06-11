@@ -2,7 +2,7 @@
 name = "numerai_era_data"
 description = "era-level data for Numerai"
 readme = "README.md"
-version = "0.1.1"
+version = "1.0.0"
 authors = [
     { name = "Gregory Morse", email = "gregorymorse07@gmail.com" }
 ]
