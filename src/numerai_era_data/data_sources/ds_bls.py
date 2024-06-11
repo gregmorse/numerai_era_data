@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import math
 
 import pandas as pd
 import requests
@@ -110,55 +111,72 @@ class DataSourceBLS(BaseDataSource):
             self.SERIES_ID_EXPORT_INDEX,
         ]
 
-        data = []
+        combined_df = pd.DataFrame()
 
-        request_data = {
-            "seriesid": series_ids,
-            "startyear": str(padded_start_date.year),
-            "endyear": str(end_date.year),
-        }
+        total_years = end_date.year - padded_start_date.year + 1
+        num_requests = math.ceil(total_years / 10.0)
 
-        # Send request to the BLS API
-        response = requests.post(api_url, headers=headers, json=request_data)
+        for i in range(num_requests):
+            # Calculate the start and end years for the current request
+            start_year = padded_start_date.year + i * 10
+            end_year = min(start_year + 9, end_date.year)
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            json_response = response.json()
-            data = []
 
-            for series in json_response["Results"]["series"]:
-                series_id = series["seriesID"]
-                series_data = series["data"]
+            request_data = {
+                "seriesid": series_ids,
+                "startyear": str(start_year),
+                "endyear": str(end_year),
+            }
 
-                # Extract values and dates
-                values = [float(data_point["value"]) for data_point in series_data]
-                dates = []
-                for data_point in series_data:
-                    if data_point["period"][0] == "Q":
-                        quarter_num = int(data_point["period"][1:])
-                        year = int(data_point["year"])
-                        month = (quarter_num - 1) * 3 + 1
-                        date = pd.to_datetime(f"{year}-{month}-01")
+            # Send request to the BLS API
+            response = requests.post(api_url, headers=headers, json=request_data)
+
+            # Check if the request was successful
+            if response.status_code == 200:
+                request_df = pd.DataFrame()
+
+                json_response = response.json()
+
+                for series in json_response["Results"]["series"]:
+                    series_id = series["seriesID"]
+                    series_data = series["data"]
+
+                    # Extract values and dates
+                    values = [float(data_point["value"]) for data_point in series_data]
+                    dates = []
+                    for data_point in series_data:
+                        if data_point["period"][0] == "Q":
+                            quarter_num = int(data_point["period"][1:])
+                            year = int(data_point["year"])
+                            month = (quarter_num - 1) * 3 + 1
+                            date = pd.to_datetime(f"{year}-{month}-01")
+                        else:
+                            date = pd.to_datetime(data_point["year"] + "-" + data_point["period"][1:])
+                        dates.append(date)
+
+                    # Create DataFrame for the series data
+                    series_df = pd.DataFrame({self.DATE_COL: dates, series_id: values})
+                    series_df = series_df.set_index(self.DATE_COL)
+
+                     # Merge the series data into the combined DataFrame
+                    if request_df.empty:
+                        request_df = series_df
                     else:
-                        date = pd.to_datetime(data_point["year"] + "-" + data_point["period"][1:])
-                    dates.append(date)
+                        request_df = pd.merge(request_df, series_df, left_index=True, right_index=True, how='outer')
 
-                # Create DataFrame for the series data
-                series_df = pd.DataFrame({"Date": dates, series_id: values})
-                series_df = series_df.set_index("Date")
+                # Merge the request data into the combined DataFrame
+                if combined_df.empty:
+                    combined_df = request_df
+                else:
+                    combined_df = pd.concat([combined_df, request_df])
 
-                data.append(series_df)
-
-            # Combine the data into a single DataFrame
-            combined_df = pd.concat(data, axis=1).reset_index()
-        else:
-            print(f"Error occurred while fetching data for series ID: {series_id}")
-            raise Exception(response.text)
+            else:
+                print(f"Error occurred while fetching data for series ID: {series_id}")
+                raise Exception(response.text)
 
         # rename columns
         combined_df.rename(
             columns={
-                "Date": self.DATE_COL,
                 self.SERIES_ID_CPI_U: self.COLUMN_CPI_U,
                 self.SERIES_ID_CPI_U_ALL_ITEMS: self.COLUMN_CPI_U_ALL,
                 self.SERIES_ID_PPI_FINISHED_GOODS: self.COLUMN_PPI_FINISHED,
@@ -193,6 +211,7 @@ class DataSourceBLS(BaseDataSource):
         combined_df[self.COLUMN_EXPORT_INDEX_YOY] = combined_df[self.COLUMN_EXPORT_INDEX].pct_change(12)
 
         # convert date column to datetime
+        combined_df = combined_df.reset_index()
         combined_df[self.DATE_COL] = pd.to_datetime(combined_df[self.DATE_COL])
         combined_df[self.DATE_COL] = combined_df[self.DATE_COL].dt.date
 
