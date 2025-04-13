@@ -33,7 +33,7 @@ class DataSourceMarkets(BaseDataSource):
 
     def get_data(self, start_date: date, end_date: date) -> pd.DataFrame:
         # adjusted close is more accurate than close
-        CLOSE_COL = "Adj Close"
+        CLOSE_COL = "Close"
 
         # get 300 calendar days of padding for the 200 day moving average calculation
         padded_start_date = start_date - timedelta(days=300)
@@ -45,6 +45,11 @@ class DataSourceMarkets(BaseDataSource):
 
         # dataframe with only trading days
         data = yf.download("^SPX", start=padded_start_date, end=end_date)
+
+        if isinstance(data.columns, pd.MultiIndex):
+            # Extract just the first element of each tuple for column names
+            data.columns = [col[0] for col in data.columns]
+
         data = data.reset_index()
 
         # calculate moving averages
